@@ -1,0 +1,13 @@
+{
+  "run": "123456789",
+  "firstNames": "Usuario",
+  "lastNames": "Prueba",
+  "email": "usuario.prueba@example.com",
+  "phone": "56912345678",
+  "dirStreet1": "Calle Principal",
+  "dirStreet2": "Sector Centro",
+  "dirStNumber": "123",
+  "dirInNumber": "A",
+  "notify": true,
+  "passwordHash": "Contrasena123"
+} 

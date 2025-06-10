@@ -1,0 +1,9 @@
+{
+    "scripts": {
+        "build": "docker-compose build",
+        "up": "docker-compose up -d",
+        "donw": "docker-compose down -v",
+        "start": "docker-compose down -v && docker-compose build && docker-compose up -d",
+        "sync": "docker exec -it webapi dotnet ef database update"
+    }
+}

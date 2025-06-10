@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  oracle:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: oracle
+    environment:
+      - ORACLE_PASSWORD=oracle
+      - ORACLE_DATABASE=FREEPDB1
+      - APP_USER=system
+      - APP_USER_PASSWORD=oracle
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    networks:
+      - thefirm-network
+  
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: thefirm-api
+    depends_on:
+      - oracle
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DOCKER_ENVIRONMENT=true
+    ports:
+      - "5100:80"
+    restart: unless-stopped
+    networks:
+      - thefirm-network
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: thefirm-admin
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:80
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - thefirm-network
+
+volumes:
+  oracle-data:
+
+networks:
+  thefirm-network:
+    driver: bridge 

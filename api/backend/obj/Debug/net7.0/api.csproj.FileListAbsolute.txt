@@ -1,0 +1,7 @@
+C:\Users\neto\projects\TheFirmApi\api\obj\Debug\net7.0\api.csproj.AssemblyReference.cache
+C:\Users\neto\projects\TheFirmApi\api\obj\Debug\net7.0\api.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\neto\projects\TheFirmApi\api\obj\Debug\net7.0\api.AssemblyInfoInputs.cache
+C:\Users\neto\projects\TheFirmApi\api\obj\Debug\net7.0\api.AssemblyInfo.cs
+C:\Users\neto\projects\TheFirmApi\api\obj\Debug\net7.0\api.csproj.CoreCompileInputs.cache
+C:\Users\neto\projects\TheFirmApi\api\obj\Debug\net7.0\api.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\neto\projects\TheFirmApi\api\obj\Debug\net7.0\api.MvcApplicationPartsAssemblyInfo.cache
