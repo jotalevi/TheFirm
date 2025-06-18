@@ -9,6 +9,8 @@ interface User {
   lastNames: string;
   email: string;
   phone: string;
+  isAdmin: boolean;
+  companiesModerated?: number[];
 }
 
 interface AuthContextType {
@@ -18,6 +20,9 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
+  isModerator: boolean;
+  companiesModerated: number[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,8 +88,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (userResponse.ok) {
           const userData = await userResponse.json();
-          localStorage.setItem('auth_user', JSON.stringify(userData));
-          setUser(userData);
+          // Obtener empresas donde es moderador
+          const modCompaniesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5100'}/users/${run}/companies-moderated`, {
+            headers: {
+              'Authorization': `Bearer ${authToken}`,
+            },
+          });
+          let companiesModerated: number[] = [];
+          if (modCompaniesRes.ok) {
+            companiesModerated = await modCompaniesRes.json();
+          }
+          const userWithRoles = { ...userData, companiesModerated };
+          localStorage.setItem('auth_user', JSON.stringify(userWithRoles));
+          setUser(userWithRoles);
         }
 
         return true;
@@ -106,6 +122,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const isAuthenticated = !!token && !!user;
+  const isAdmin = !!user?.isAdmin;
+  const isModerator = !!user?.companiesModerated && user.companiesModerated.length > 0;
 
   const value: AuthContextType = {
     user,
@@ -114,6 +132,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     isLoading,
     isAuthenticated,
+    isAdmin,
+    isModerator,
+    companiesModerated: user?.companiesModerated || [],
   };
 
   return (

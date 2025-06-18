@@ -60,6 +60,5 @@ public class CompanyEntity
     
     // Relaciones
     public List<EventEntity> Events { get; set; } = new();
-    public List<UserAdminCompanyEntity> Admins { get; set; } = new();
     public List<UserModCompanyEntity> Moderators { get; set; } = new();
 } 

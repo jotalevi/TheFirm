@@ -12,7 +12,6 @@ public class AppDbContext : DbContext
     public DbSet<CalendarEventEntity> CalendarEvents { get; set; }
     public DbSet<TicketTierEntity> TicketTiers { get; set; }
     public DbSet<TicketBoughtEntity> TicketsBought { get; set; }
-    public DbSet<UserAdminCompanyEntity> UserAdminCompanies { get; set; }
     public DbSet<UserModCompanyEntity> UserModCompanies { get; set; }
     public DbSet<AnalyticsSessionEntity> AnalyticsSessions { get; set; }
     public DbSet<AnalyticsEventEntity> AnalyticsEvents { get; set; }
@@ -77,22 +76,6 @@ public class AppDbContext : DbContext
             entity.HasOne(tb => tb.Tier)
                   .WithMany(tt => tt.TicketsBought)
                   .HasForeignKey(tb => tb.TierId)
-                  .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<UserAdminCompanyEntity>(entity =>
-        {
-            entity.ToTable("user_admin_company");
-            entity.HasKey(uac => new { uac.UserRun, uac.CompanyId });
-            
-            entity.HasOne(uac => uac.User)
-                  .WithMany(u => u.AdminCompanies)
-                  .HasForeignKey(uac => uac.UserRun)
-                  .OnDelete(DeleteBehavior.Cascade);
-                  
-            entity.HasOne(uac => uac.Company)
-                  .WithMany(c => c.Admins)
-                  .HasForeignKey(uac => uac.CompanyId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -193,246 +176,52 @@ public static class DbInitializer
         {
             new UserEntity
             {
-                Run = "12345678-9",
+                Run = "11111111-1",
                 FirstNames = "Admin",
-                LastNames = "System",
-                Email = "admin@thefirm.com",
-                Phone = "56912345678",
-                DirStreet1 = "Main Street",
+                LastNames = "Principal",
+                Email = "admin@demo.com",
+                Phone = "56911111111",
+                DirStreet1 = "Calle Admin",
                 DirStreet2 = string.Empty,
-                DirStNumber = "123",
+                DirStNumber = "1",
                 DirInNumber = string.Empty,
                 Notify = true,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!")
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("password!"),
+                IsAdmin = true
             },
             new UserEntity
             {
-                Run = "98765432-1",
-                FirstNames = "Juan",
-                LastNames = "Pérez",
-                Email = "juan.perez@example.com",
-                Phone = "56987654321",
-                DirStreet1 = "Av. Providencia",
-                DirStreet2 = "Depto 301",
-                DirStNumber = "1500",
-                DirInNumber = "301",
-                Notify = true,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!")
-            },
-            new UserEntity
-            {
-                Run = "11111111-1",
-                FirstNames = "María",
-                LastNames = "González",
-                Email = "maria.gonzalez@example.com",
-                Phone = "56911111111",
-                DirStreet1 = "Las Condes",
+                Run = "22222222-2",
+                FirstNames = "Mod",
+                LastNames = "Moderador",
+                Email = "mod@demo.com",
+                Phone = "56922222222",
+                DirStreet1 = "Calle Mod",
                 DirStreet2 = string.Empty,
-                DirStNumber = "500",
+                DirStNumber = "2",
+                DirInNumber = string.Empty,
+                Notify = true,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("password!"),
+                IsAdmin = false
+            },
+            new UserEntity
+            {
+                Run = "33333333-3",
+                FirstNames = "Cliente",
+                LastNames = "Comun",
+                Email = "cliente@demo.com",
+                Phone = "56933333333",
+                DirStreet1 = "Calle Cliente",
+                DirStreet2 = string.Empty,
+                DirStNumber = "3",
                 DirInNumber = string.Empty,
                 Notify = false,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("User123!")
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("password!"),
+                IsAdmin = false
             }
         };
 
         context.Users.AddRange(users);
-        context.SaveChanges();
-
-        // Crear compañías
-        var companies = new CompanyEntity[]
-        {
-            new CompanyEntity
-            {
-                CompanyName = "Eventos Santiago",
-                CompanyRun = "76123456-7",
-                LogoIrid = "logo-eventos-santiago",
-                BannerIrid = "banner-eventos-santiago",
-                HtmlIrid = "html-eventos-santiago",
-                ContactRut = "12345678-9",
-                ContactName = "Admin",
-                ContactSurname = "System",
-                ContactEmail = "admin@thefirm.com",
-                ContactPhone = "56912345678",
-                ContactDirStreet1 = "Main Street",
-                ContactDirStreet2 = string.Empty,
-                ContactDirStNumber = "123",
-                ContactDirInNumber = string.Empty
-            },
-            new CompanyEntity
-            {
-                CompanyName = "Conciertos Chile",
-                CompanyRun = "76987654-3",
-                LogoIrid = "logo-conciertos-chile",
-                BannerIrid = "banner-conciertos-chile",
-                HtmlIrid = "html-conciertos-chile",
-                ContactRut = "98765432-1",
-                ContactName = "Juan",
-                ContactSurname = "Pérez",
-                ContactEmail = "juan.perez@example.com",
-                ContactPhone = "56987654321",
-                ContactDirStreet1 = "Av. Providencia",
-                ContactDirStreet2 = "Depto 301",
-                ContactDirStNumber = "1500",
-                ContactDirInNumber = "301"
-            }
-        };
-
-        context.Companies.AddRange(companies);
-        context.SaveChanges();
-
-        // Crear relaciones admin-compañía
-        var adminCompanies = new UserAdminCompanyEntity[]
-        {
-            new UserAdminCompanyEntity
-            {
-                UserRun = "12345678-9",
-                CompanyId = 1
-            },
-            new UserAdminCompanyEntity
-            {
-                UserRun = "98765432-1",
-                CompanyId = 2
-            }
-        };
-
-        context.UserAdminCompanies.AddRange(adminCompanies);
-        
-        // Crear eventos
-        var now = DateTime.UtcNow;
-        var events = new EventEntity[]
-        {
-            new EventEntity
-            {
-                Slug = "evento-2025",
-                EventName = "Gran Evento 2025",
-                EventDescription = "El mejor evento del año",
-                StartDate = now.AddMonths(2),
-                EndDate = now.AddMonths(2).AddHours(5),
-                LogoIrid = "logo-evento-2025",
-                BannerIrid = "banner-evento-2025",
-                TemplateIrid = "template-evento-2025",
-                CssIrid = "css-evento-2025",
-                Public = true,
-                CompanyId = 1
-            },
-            new EventEntity
-            {
-                Slug = "concierto-rock",
-                EventName = "Concierto de Rock",
-                EventDescription = "El mejor concierto de rock",
-                StartDate = now.AddMonths(3),
-                EndDate = now.AddMonths(3).AddHours(4),
-                LogoIrid = "logo-concierto-rock",
-                BannerIrid = "banner-concierto-rock",
-                TemplateIrid = "template-concierto-rock",
-                CssIrid = "css-concierto-rock",
-                Public = true,
-                CompanyId = 2
-            }
-        };
-
-        context.Events.AddRange(events);
-        context.SaveChanges();
-
-        // Crear tiers de tickets
-        var ticketTiers = new TicketTierEntity[]
-        {
-            new TicketTierEntity
-            {
-                TierName = "VIP",
-                BasePrice = 100000,
-                EntryAllowedFrom = now.AddMonths(2).AddHours(-1),
-                EntryAllowedTo = now.AddMonths(2).AddHours(5),
-                SingleUse = true,
-                SingleDaily = false,
-                TierPdfTemplateIrid = "pdf-vip",
-                TierMailTemplateIrid = "mail-vip",
-                StockInitial = 100,
-                StockCurrent = 100,
-                StockSold = 0,
-                EventId = 1
-            },
-            new TicketTierEntity
-            {
-                TierName = "General",
-                BasePrice = 50000,
-                EntryAllowedFrom = now.AddMonths(2),
-                EntryAllowedTo = now.AddMonths(2).AddHours(5),
-                SingleUse = true,
-                SingleDaily = false,
-                TierPdfTemplateIrid = "pdf-general",
-                TierMailTemplateIrid = "mail-general",
-                StockInitial = 500,
-                StockCurrent = 500,
-                StockSold = 0,
-                EventId = 1
-            },
-            new TicketTierEntity
-            {
-                TierName = "VIP Concierto",
-                BasePrice = 120000,
-                EntryAllowedFrom = now.AddMonths(3).AddHours(-1),
-                EntryAllowedTo = now.AddMonths(3).AddHours(4),
-                SingleUse = true,
-                SingleDaily = false,
-                TierPdfTemplateIrid = "pdf-vip-concierto",
-                TierMailTemplateIrid = "mail-vip-concierto",
-                StockInitial = 200,
-                StockCurrent = 200,
-                StockSold = 0,
-                EventId = 2
-            },
-            new TicketTierEntity
-            {
-                TierName = "General Concierto",
-                BasePrice = 60000,
-                EntryAllowedFrom = now.AddMonths(3),
-                EntryAllowedTo = now.AddMonths(3).AddHours(4),
-                SingleUse = true,
-                SingleDaily = false,
-                TierPdfTemplateIrid = "pdf-general-concierto",
-                TierMailTemplateIrid = "mail-general-concierto",
-                StockInitial = 1000,
-                StockCurrent = 1000,
-                StockSold = 0,
-                EventId = 2
-            }
-        };
-
-        context.TicketTiers.AddRange(ticketTiers);
-        
-        // Crear cupones
-        var coupons = new CouponEntity[]
-        {
-            new CouponEntity
-            {
-                Code = "DESCUENTO20",
-                Description = "20% de descuento en todos los tickets",
-                DiscountType = "percentage",
-                DiscountValue = 20,
-                UsageLimit = 100,
-                UsageCount = 0,
-                ValidFrom = now,
-                ValidTo = now.AddMonths(6),
-                EventId = 1,
-                Active = true
-            },
-            new CouponEntity
-            {
-                Code = "DESCUENTO10000",
-                Description = "10000 pesos de descuento",
-                DiscountType = "fixed",
-                DiscountValue = 10000,
-                UsageLimit = 50,
-                UsageCount = 0,
-                ValidFrom = now,
-                ValidTo = now.AddMonths(6),
-                EventId = 2,
-                Active = true
-            }
-        };
-
-        context.Coupons.AddRange(coupons);
         context.SaveChanges();
     }
 }

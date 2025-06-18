@@ -15,4 +15,5 @@ namespace TheFirmApi.Dtos.Auth;
     required public string DirInNumber { get; set; }
     required public bool Notify { get; set; }
     required public string PasswordHash { get; set; }
+    required public bool IsAdmin { get; set; }
     }

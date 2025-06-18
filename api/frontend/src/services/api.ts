@@ -105,6 +105,10 @@ export const userService = {
     const response = await apiClient.get(`/users/${run}`);
     return response.data;
   },
+  getByCompany: async (companyId: number) => {
+    const response = await apiClient.get(`/users/by-company/${companyId}`);
+    return response.data;
+  },
   create: async (userData: UserData) => {
     const response = await apiClient.post('/users', userData);
     return response.data;
@@ -121,25 +125,19 @@ export const userService = {
 
 // Servicios para Empresas
 export const companyService = {
-  getAll: async (page = 1, limit = 10, search = '') => {
-    const response = await apiClient.get(`/companies?page=${page}&limit=${limit}&search=${search}`);
-    return {
-      items: response.data,
-      currentPage: page,
-      totalPages: 1,
-      totalItems: response.data.length,
-      pageSize: limit
-    };
+  getAll: async () => {
+    const response = await apiClient.get('/companies');
+    return response.data;
   },
   getById: async (id: number) => {
     const response = await apiClient.get(`/companies/${id}`);
     return response.data;
   },
-  create: async (companyData: CompanyData) => {
+  create: async (companyData: any) => {
     const response = await apiClient.post('/companies', companyData);
     return response.data;
   },
-  update: async (id: number, companyData: CompanyData) => {
+  update: async (id: number, companyData: any) => {
     const response = await apiClient.put(`/companies/${id}`, companyData);
     return response.data;
   },
@@ -151,48 +149,56 @@ export const companyService = {
 
 // Servicios para Eventos
 export const eventService = {
-  getAll: async (page = 1, limit = 10, search = '', filter = '') => {
-    const response = await apiClient.get(`/events?page=${page}&limit=${limit}&search=${search}&filter=${filter}`);
+  getAll: async () => {
+    const response = await apiClient.get('/events');
     return response.data;
   },
-  getById: async (id: number) => {
-    const response = await apiClient.get(`/events/${id}`);
+  getPublic: async () => {
+    const response = await apiClient.get('/events/public');
     return response.data;
   },
-  create: async (eventData: EventData) => {
+  getAllForAdmin: async () => {
+    const response = await apiClient.get('/events/all');
+    return response.data;
+  },
+  getById: async (slug: string) => {
+    const response = await apiClient.get(`/events/${slug}`);
+    return response.data;
+  },
+  create: async (eventData: any) => {
     const response = await apiClient.post('/events', eventData);
     return response.data;
   },
-  update: async (id: number, eventData: EventData) => {
-    const response = await apiClient.put(`/events/${id}`, eventData);
+  update: async (slug: string, eventData: any) => {
+    const response = await apiClient.put(`/events/${slug}`, eventData);
     return response.data;
   },
-  delete: async (id: number) => {
-    const response = await apiClient.delete(`/events/${id}`);
+  delete: async (slug: string) => {
+    const response = await apiClient.delete(`/events/${slug}`);
     return response.data;
   }
 };
 
 // Servicios para Tickets
 export const ticketService = {
-  getTiers: async (page = 1, limit = 10, search = '', eventId = '') => {
-    const response = await apiClient.get(`/tickets/tiers?page=${page}&limit=${limit}&search=${search}&eventId=${eventId}`);
+  getTiersByEvent: async (eventSlug: string) => {
+    const response = await apiClient.get(`/events/${eventSlug}/tiers`);
     return response.data;
   },
-  getTierById: async (id: number) => {
-    const response = await apiClient.get(`/tickets/tiers/${id}`);
+  getTierById: async (eventSlug: string, tierId: number) => {
+    const response = await apiClient.get(`/events/${eventSlug}/tiers/${tierId}`);
     return response.data;
   },
-  createTier: async (tierData: TicketTierData) => {
-    const response = await apiClient.post('/tickets/tiers', tierData);
+  createTier: async (eventSlug: string, tierData: any) => {
+    const response = await apiClient.post(`/events/${eventSlug}/tiers`, tierData);
     return response.data;
   },
-  updateTier: async (id: number, tierData: TicketTierData) => {
-    const response = await apiClient.put(`/tickets/tiers/${id}`, tierData);
+  updateTier: async (eventSlug: string, tierId: number, tierData: any) => {
+    const response = await apiClient.put(`/events/${eventSlug}/tiers/${tierId}`, tierData);
     return response.data;
   },
-  deleteTier: async (id: number) => {
-    const response = await apiClient.delete(`/tickets/tiers/${id}`);
+  deleteTier: async (eventSlug: string, tierId: number) => {
+    const response = await apiClient.delete(`/events/${eventSlug}/tiers/${tierId}`);
     return response.data;
   },
   getOrders: async (page = 1, limit = 10, search = '', status = '') => {
@@ -221,6 +227,26 @@ export const analyticsService = {
   },
   getPopularEvents: async () => {
     const response = await apiClient.get('/events');
+    return response.data;
+  }
+};
+
+// Servicios para gestión de roles de usuario
+export const userRoleService = {
+  setUserAdmin: async (userRun: string, isAdmin: boolean) => {
+    const response = await apiClient.put(`/users/${userRun}/admin`, isAdmin);
+    return response.data;
+  },
+  addUserToCompanyModeration: async (userRun: string, companyId: number) => {
+    const response = await apiClient.post(`/users/${userRun}/moderate-company/${companyId}`);
+    return response.data;
+  },
+  removeUserFromCompanyModeration: async (userRun: string, companyId: number) => {
+    const response = await apiClient.delete(`/users/${userRun}/moderate-company/${companyId}`);
+    return response.data;
+  },
+  getUserCompaniesModerated: async (userRun: string) => {
+    const response = await apiClient.get(`/users/${userRun}/companies-moderated`);
     return response.data;
   }
 };

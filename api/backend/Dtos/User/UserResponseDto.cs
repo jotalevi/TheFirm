@@ -14,4 +14,5 @@ public class UserResponseDto
     public string DirStNumber { get; set; } = string.Empty;
     public string? DirInNumber { get; set; }
     public bool Notify { get; set; }
+    public bool IsAdmin { get; set; }
 } 

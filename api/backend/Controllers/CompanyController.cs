@@ -5,6 +5,7 @@ using TheFirmApi.Data;
 using TheFirmApi.Dtos.Company;
 using TheFirmApi.Dtos.Event;
 using TheFirmApi.Entities;
+using System.Security.Claims;
 
 namespace TheFirmApi.Controllers;
 
@@ -23,7 +24,42 @@ public class CompanyController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetCompanies()
     {
-        var companies = await _context.Companies
+        // Get the current user's RUN from the JWT token
+        var userRun = User.FindFirst(ClaimTypes.Name)?.Value;
+        if (string.IsNullOrEmpty(userRun))
+            return Unauthorized("User not authenticated");
+
+        // Get the current user to check if they are admin
+        var currentUser = await _context.Users.FindAsync(userRun);
+        if (currentUser == null)
+            return Unauthorized("User not found");
+
+        IQueryable<CompanyEntity> companiesQuery;
+
+        if (currentUser.IsAdmin)
+        {
+            // Admin can see all companies
+            companiesQuery = _context.Companies;
+        }
+        else
+        {
+            // Moderators: only companies they moderate
+            var moderatedCompanyIds = await _context.UserModCompanies
+                .Where(umc => umc.UserRun == userRun)
+                .Select(umc => umc.CompanyId)
+                .ToListAsync();
+
+            if (moderatedCompanyIds.Count == 0)
+            {
+                // Regular user, not moderator of any company
+                return Ok(new List<CompanyDto>());
+            }
+
+            companiesQuery = _context.Companies
+                .Where(c => moderatedCompanyIds.Contains(c.Id));
+        }
+
+        var companies = await companiesQuery
             .Select(c => new CompanyDto
             {
                 Id = c.Id,

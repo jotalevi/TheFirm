@@ -1,144 +1,266 @@
 "use client";
 
-import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent } from '@/components/ui/Card';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/Table';
 import { Input } from '@/components/ui/Input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { ticketService } from '@/services/api';
+import { eventService } from '@/services/api';
+import TicketModal from '@/components/forms/TicketModal';
+import { useAuth } from '@/contexts/AuthContext';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+
+interface TicketTier {
+  id: number;
+  tierName: string;
+  basePrice: number;
+  entryAllowedFrom?: string;
+  entryAllowedTo?: string;
+  singleUse: boolean;
+  singleDaily: boolean;
+  tierPdfTemplateIrid?: string;
+  tierMailTemplateIrid?: string;
+  stockInitial: number;
+  stockCurrent: number;
+  stockSold: number;
+  eventId: number;
+  eventName: string;
+}
+
+interface Event {
+  id: number;
+  slug: string;
+  eventName: string;
+  companyName: string;
+}
 
 export default function TicketsPage() {
-  // Datos de ejemplo
-  const ticketTiers = [
-    { 
-      id: 1,
-      name: 'VIP',
-      eventName: 'Conferencia de Tecnología 2024',
-      eventDate: '2024-08-15',
-      price: 150000,
-      available: 50,
-      sold: 30
-    },
-    { 
-      id: 2,
-      name: 'General',
-      eventName: 'Conferencia de Tecnología 2024',
-      eventDate: '2024-08-15',
-      price: 50000,
-      available: 200,
-      sold: 120
-    },
-    { 
-      id: 3,
-      name: 'Premium',
-      eventName: 'Festival de Música Santiago',
-      eventDate: '2024-10-12',
-      price: 85000,
-      available: 100,
-      sold: 75
-    },
-    { 
-      id: 4,
-      name: 'General',
-      eventName: 'Festival de Música Santiago',
-      eventDate: '2024-10-12',
-      price: 45000,
-      available: 500,
-      sold: 375
-    },
-    { 
-      id: 5,
-      name: 'Entrada',
-      eventName: 'Exposición de Arte Contemporáneo',
-      eventDate: '2024-11-03',
-      price: 15000,
-      available: 300,
-      sold: 150
-    },
-  ];
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState<TicketTier[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTicket, setSelectedTicket] = useState<TicketTier | null>(null);
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  useEffect(() => {
+    if (selectedEvent) {
+      loadTickets(selectedEvent);
+    } else {
+      setTickets([]);
+    }
+  }, [selectedEvent]);
+
+  const loadEvents = async () => {
+    try {
+      const eventsData = await eventService.getAll();
+      setEvents(eventsData);
+      if (eventsData.length > 0) {
+        setSelectedEvent(eventsData[0].slug);
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTickets = async (eventSlug: string) => {
+    try {
+      setLoading(true);
+      const ticketsData = await ticketService.getTiersByEvent(eventSlug);
+      setTickets(ticketsData);
+    } catch (error) {
+      console.error('Error loading tickets:', error);
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateTicket = async (ticketData: any) => {
+    try {
+      await ticketService.createTier(selectedEvent, ticketData);
+      loadTickets(selectedEvent);
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+    }
+  };
+
+  const handleUpdateTicket = async (ticketData: any) => {
+    if (!selectedTicket) return;
+    try {
+      await ticketService.updateTier(selectedEvent, selectedTicket.id, ticketData);
+      loadTickets(selectedEvent);
+      setSelectedTicket(null);
+    } catch (error) {
+      console.error('Error updating ticket:', error);
+    }
+  };
+
+  const handleDeleteTicket = async () => {
+    if (!selectedTicket) return;
+    try {
+      await ticketService.deleteTier(selectedEvent, selectedTicket.id);
+      loadTickets(selectedEvent);
+      setSelectedTicket(null);
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+    }
+  };
+
+  const filteredTickets = tickets.filter(ticket =>
+    ticket.tierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    ticket.eventName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const canManageTickets = user?.isAdmin || (user?.companiesModerated && user.companiesModerated.length > 0);
+
+  if (!canManageTickets) {
+    return (
+      <DashboardLayout title="Gestión de Tickets">
+        <div className="p-6">
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-center text-gray-600">
+                No tienes permisos para gestionar tickets.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Gestión de Tickets">
-      <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-xl font-bold">Categorías de Tickets</h2>
-        <Button>Crear Categoría</Button>
-      </div>
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Gestión de Tickets</h1>
+          {selectedEvent && (
+            <TicketModal
+              mode="create"
+              eventSlug={selectedEvent}
+              onSave={handleCreateTicket}
+            >
+              <Button>Crear Nuevo Tier</Button>
+            </TicketModal>
+          )}
+        </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-4 flex justify-between items-center">
-            <div className="w-64">
-              <Input
-                type="text"
-                placeholder="Buscar categorías..."
-              />
-            </div>
-            <div className="flex gap-2">
-              <select className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                <option value="">Todos los eventos</option>
-                <option value="tech">Conferencia de Tecnología 2024</option>
-                <option value="festival">Festival de Música Santiago</option>
-                <option value="expo">Exposición de Arte</option>
-              </select>
-            </div>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Evento</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Precio</TableHead>
-                <TableHead>Disponibles</TableHead>
-                <TableHead>Vendidos</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ticketTiers.map((tier) => (
-                <TableRow key={tier.id}>
-                  <TableCell className="font-medium">{tier.name}</TableCell>
-                  <TableCell>{tier.eventName}</TableCell>
-                  <TableCell>{tier.eventDate}</TableCell>
-                  <TableCell>${tier.price.toLocaleString()}</TableCell>
-                  <TableCell>{tier.available}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <span className="mr-2">{tier.sold}</span>
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${(tier.sold / (tier.available + tier.sold)) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Ver</Button>
-                      <Button variant="outline" size="sm">Editar</Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-2">Filtrar por Evento</label>
+            <select
+              value={selectedEvent}
+              onChange={(e) => setSelectedEvent(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              <option value="">Seleccionar evento</option>
+              {events.map((event) => (
+                <option key={event.slug} value={event.slug}>
+                  {event.eventName} - {event.companyName}
+                </option>
               ))}
-            </TableBody>
-          </Table>
-
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">
-              Mostrando 5 de 15 categorías
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled>Anterior</Button>
-              <Button variant="outline" size="sm">1</Button>
-              <Button variant="outline" size="sm">2</Button>
-              <Button variant="outline" size="sm">3</Button>
-              <Button variant="outline" size="sm">Siguiente</Button>
-            </div>
+            </select>
           </div>
-        </CardContent>
-      </Card>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Buscar</label>
+            <Input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-center">Cargando tickets...</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredTickets.map((ticket) => (
+              <Card key={ticket.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-lg">{ticket.tierName}</CardTitle>
+                  <p className="text-sm text-gray-600">{ticket.eventName}</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Precio:</span>
+                      <span>${ticket.basePrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Stock Inicial:</span>
+                      <span>{ticket.stockInitial}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Stock Actual:</span>
+                      <span>{ticket.stockCurrent}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Vendidos:</span>
+                      <span>{ticket.stockSold}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Uso Único:</span>
+                      <span>{ticket.singleUse ? 'Sí' : 'No'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Uso Diario:</span>
+                      <span>{ticket.singleDaily ? 'Sí' : 'No'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2 mt-4">
+                    <TicketModal
+                      mode="view"
+                      ticket={ticket}
+                      eventSlug={selectedEvent}
+                    >
+                      <Button variant="outline" size="sm">
+                        Ver
+                      </Button>
+                    </TicketModal>
+
+                    <TicketModal
+                      mode="edit"
+                      ticket={ticket}
+                      eventSlug={selectedEvent}
+                      onSave={handleUpdateTicket}
+                      onDelete={handleDeleteTicket}
+                    >
+                      <Button size="sm">
+                        Editar
+                      </Button>
+                    </TicketModal>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {!loading && filteredTickets.length === 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-center text-gray-600">
+                {selectedEvent ? 'No se encontraron tickets para este evento.' : 'Selecciona un evento para ver sus tickets.'}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </DashboardLayout>
   );
 } 

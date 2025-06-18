@@ -11,6 +11,7 @@ import {
   Ticket, 
   BarChart3
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { cn } from '@/lib/utils';
 
@@ -41,6 +42,8 @@ const NavItem: React.FC<NavItemProps> = ({ href, icon, label }) => {
 };
 
 const Sidebar: React.FC = () => {
+  const { isAdmin, isModerator } = useAuth();
+  if (!isAdmin && !isModerator) return null;
   return (
     <aside className="w-64 h-screen bg-card border-r border-border fixed left-0 top-0 overflow-y-auto">
       <div className="p-6">
@@ -57,11 +60,13 @@ const Sidebar: React.FC = () => {
           icon={<Calendar className="h-4 w-4" />} 
           label="Eventos" 
         />
-        <NavItem 
-          href="/users" 
-          icon={<Users className="h-4 w-4" />} 
-          label="Usuarios" 
-        />
+        {isAdmin && (
+          <NavItem 
+            href="/users" 
+            icon={<Users className="h-4 w-4" />} 
+            label="Usuarios" 
+          />
+        )}
         <NavItem 
           href="/companies" 
           icon={<Building2 className="h-4 w-4" />} 
@@ -72,11 +77,13 @@ const Sidebar: React.FC = () => {
           icon={<Ticket className="h-4 w-4" />} 
           label="Tickets" 
         />
-        <NavItem 
-          href="/analytics" 
-          icon={<BarChart3 className="h-4 w-4" />} 
-          label="Analíticas" 
-        />
+        {isAdmin && (
+          <NavItem 
+            href="/analytics" 
+            icon={<BarChart3 className="h-4 w-4" />} 
+            label="Analíticas" 
+          />
+        )}
       </nav>
     </aside>
   );

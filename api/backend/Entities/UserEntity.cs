@@ -46,10 +46,12 @@ public class UserEntity
     [Column("password_hash")]
     public string PasswordHash { get; set; } = string.Empty;
 
+    [Column("is_admin")]
+    public bool IsAdmin { get; set; } = false;
+
     // Relaciones
     public List<TicketBoughtEntity> Tickets { get; set; } = new();
     public List<TicketOrderEntity> Orders { get; set; } = new();
     public List<AnalyticsSessionEntity> AnalyticsSessions { get; set; } = new();
-    public List<UserAdminCompanyEntity> AdminCompanies { get; set; } = new();
     public List<UserModCompanyEntity> ModeratedCompanies { get; set; } = new();
 }

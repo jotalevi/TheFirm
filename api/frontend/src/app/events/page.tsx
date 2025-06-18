@@ -1,72 +1,160 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/Table';
 import { Input } from '@/components/ui/Input';
+import EventModal from '@/components/events/EventModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { eventService, companyService } from '@/services/api';
+
+interface Event {
+  id?: number;
+  slug: string;
+  eventName: string;
+  eventDescription: string;
+  startDate: string;
+  endDate: string;
+  logoIrid: string;
+  bannerIrid: string;
+  templateIrid: string;
+  cssIrid: string;
+  public: boolean;
+  companyId: number;
+  companyName?: string;
+}
+
+interface Company {
+  id: number;
+  companyName: string;
+}
 
 export default function EventsPage() {
-  // Datos de ejemplo
-  const events = [
-    { 
-      id: 1,
-      name: 'Conferencia de Tecnología 2024',
-      company: 'Tech Solutions',
-      startDate: '2024-08-15',
-      endDate: '2024-08-17',
-      isPublic: true,
-      tickets: 450,
-      ticketsSold: 320
-    },
-    { 
-      id: 2,
-      name: 'Workshop de Marketing Digital',
-      company: 'Empresa ABC',
-      startDate: '2024-07-20',
-      endDate: '2024-07-20',
-      isPublic: false,
-      tickets: 100,
-      ticketsSold: 45
-    },
-    { 
-      id: 3,
-      name: 'Seminario de Liderazgo',
-      company: 'Corporación XYZ',
-      startDate: '2024-09-05',
-      endDate: '2024-09-06',
-      isPublic: true,
-      tickets: 200,
-      ticketsSold: 78
-    },
-    { 
-      id: 4,
-      name: 'Festival de Música Santiago',
-      company: 'Global Services',
-      startDate: '2024-10-12',
-      endDate: '2024-10-14',
-      isPublic: true,
-      tickets: 1000,
-      ticketsSold: 750
-    },
-    { 
-      id: 5,
-      name: 'Exposición de Arte Contemporáneo',
-      company: 'Industrias 123',
-      startDate: '2024-11-03',
-      endDate: '2024-11-10',
-      isPublic: true,
-      tickets: 500,
-      ticketsSold: 210
-    },
-  ];
+  const { isAdmin, isModerator, companiesModerated } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedVisibility, setSelectedVisibility] = useState('');
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Cargar eventos según el rol
+        let eventsData: Event[];
+        if (isAdmin || isModerator) {
+          eventsData = await eventService.getAllForAdmin();
+        } else {
+          eventsData = await eventService.getAll();
+        }
+
+        // Cargar empresas
+        const companiesData = await companyService.getAll();
+        
+        setEvents(eventsData);
+        setCompanies(companiesData.items || companiesData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [isAdmin, isModerator]);
+
+  // Filtrar eventos según rol y filtros
+  const filteredEvents = events.filter(event => {
+    // Filtro por rol: moderadores solo ven eventos de sus empresas
+    if (isModerator && companiesModerated && !companiesModerated.includes(event.companyId)) {
+      return false;
+    }
+
+    // Filtro por búsqueda
+    const matchesSearch = event.eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.eventDescription.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filtro por empresa
+    const matchesCompany = !selectedCompany || event.companyName === selectedCompany;
+    
+    // Filtro por visibilidad
+    const matchesVisibility = !selectedVisibility || 
+      (selectedVisibility === 'public' && event.public) ||
+      (selectedVisibility === 'private' && !event.public);
+    
+    return matchesSearch && matchesCompany && matchesVisibility;
+  });
+
+  const handleCreateEvent = async (eventData: Event) => {
+    try {
+      const newEvent = await eventService.create(eventData);
+      setEvents([...events, newEvent]);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      alert('Error al crear el evento');
+    }
+  };
+
+  const handleUpdateEvent = async (eventData: Event) => {
+    try {
+      const updatedEvent = await eventService.update(eventData.slug, eventData);
+      const updatedEvents = events.map(event => 
+        event.slug === eventData.slug ? updatedEvent : event
+      );
+      setEvents(updatedEvents);
+    } catch (error) {
+      console.error('Error updating event:', error);
+      alert('Error al actualizar el evento');
+    }
+  };
+
+  const handleDeleteEvent = async (slug: string) => {
+    try {
+      await eventService.delete(slug);
+      setEvents(events.filter(event => event.slug !== slug));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Error al eliminar el evento');
+    }
+  };
+
+  const handleSave = (eventData: Event) => {
+    if (eventData.slug && events.find(e => e.slug === eventData.slug)) {
+      handleUpdateEvent(eventData);
+    } else {
+      handleCreateEvent(eventData);
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Gestión de Eventos">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Cargando eventos...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Gestión de Eventos">
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-xl font-bold">Eventos</h2>
-        <Button>Crear Evento</Button>
+        {(isAdmin || isModerator) && (
+          <EventModal
+            mode="create"
+            companies={companies}
+            onSave={handleSave}
+          >
+            <Button>Crear Evento</Button>
+          </EventModal>
+        )}
       </div>
 
       <Card>
@@ -76,16 +164,28 @@ export default function EventsPage() {
               <Input
                 type="text"
                 placeholder="Buscar eventos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
-              <select className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <select 
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={selectedCompany}
+                onChange={(e) => setSelectedCompany(e.target.value)}
+              >
                 <option value="">Todas las empresas</option>
-                <option value="tech">Tech Solutions</option>
-                <option value="abc">Empresa ABC</option>
-                <option value="xyz">Corporación XYZ</option>
+                {companies.map(company => (
+                  <option key={company.id} value={company.companyName}>
+                    {company.companyName}
+                  </option>
+                ))}
               </select>
-              <select className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <select 
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={selectedVisibility}
+                onChange={(e) => setSelectedVisibility(e.target.value)}
+              >
                 <option value="">Visibilidad</option>
                 <option value="public">Públicos</option>
                 <option value="private">Privados</option>
@@ -101,39 +201,43 @@ export default function EventsPage() {
                 <TableHead>Fecha Inicio</TableHead>
                 <TableHead>Fecha Fin</TableHead>
                 <TableHead>Visibilidad</TableHead>
-                <TableHead>Tickets</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {events.map((event) => (
+              {filteredEvents.map((event) => (
                 <TableRow key={event.id}>
-                  <TableCell className="font-medium">{event.name}</TableCell>
-                  <TableCell>{event.company}</TableCell>
-                  <TableCell>{event.startDate}</TableCell>
-                  <TableCell>{event.endDate}</TableCell>
+                  <TableCell className="font-medium">{event.eventName}</TableCell>
+                  <TableCell>{event.companyName}</TableCell>
+                  <TableCell>{new Date(event.startDate).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(event.endDate).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                      event.isPublic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      event.public ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {event.isPublic ? 'Público' : 'Privado'}
+                      {event.public ? 'Público' : 'Privado'}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <span className="mr-2">{event.ticketsSold}/{event.tickets}</span>
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${(event.ticketsSold / event.tickets) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Ver</Button>
-                      <Button variant="outline" size="sm">Editar</Button>
+                      <EventModal
+                        mode="view"
+                        event={event}
+                        companies={companies}
+                      >
+                        <Button variant="outline" size="sm">Ver</Button>
+                      </EventModal>
+                      {(isAdmin || isModerator) && (
+                        <EventModal
+                          mode="edit"
+                          event={event}
+                          companies={companies}
+                          onSave={handleSave}
+                          onDelete={() => handleDeleteEvent(event.slug)}
+                        >
+                          <Button variant="outline" size="sm">Editar</Button>
+                        </EventModal>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -143,14 +247,7 @@ export default function EventsPage() {
 
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-muted-foreground">
-              Mostrando 5 de 24 eventos
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled>Anterior</Button>
-              <Button variant="outline" size="sm">1</Button>
-              <Button variant="outline" size="sm">2</Button>
-              <Button variant="outline" size="sm">3</Button>
-              <Button variant="outline" size="sm">Siguiente</Button>
+              Mostrando {filteredEvents.length} de {events.length} eventos
             </div>
           </div>
         </CardContent>

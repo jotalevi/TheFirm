@@ -55,36 +55,15 @@ public class AdminController : ControllerBase
     [HttpPost("user/{run}")]
     public async Task<IActionResult> AddAdminRole(string run)
     {
-        // Verify user exists
+        // Verificar que el usuario existe
         var user = await _context.Users.FindAsync(run);
         if (user == null)
             return NotFound("User not found");
 
-        // Get all companies
-        var companies = await _context.Companies.ToListAsync();
-
-        // Add user as admin for all companies
-        foreach (var company in companies)
-        {
-            // Check if user is already an admin
-            var existingAdmin = await _context.UserAdminCompanies
-                .FirstOrDefaultAsync(uac => uac.CompanyId == company.Id && uac.UserRun == run);
-
-            if (existingAdmin == null)
-            {
-                var userAdminCompany = new UserAdminCompanyEntity
-                {
-                    UserRun = run,
-                    CompanyId = company.Id
-                };
-
-                _context.UserAdminCompanies.Add(userAdminCompany);
-            }
-        }
-
+        user.IsAdmin = true;
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "User added as admin for all companies" });
+        return Ok(new { Message = "User is now admin" });
     }
 
     [HttpGet("company/{id}/users")]
@@ -111,7 +90,8 @@ public class AdminController : ControllerBase
                 DirStreet2 = umc.User.DirStreet2,
                 DirStNumber = umc.User.DirStNumber,
                 DirInNumber = umc.User.DirInNumber,
-                Notify = umc.User.Notify
+                Notify = umc.User.Notify,
+                IsAdmin = umc.User.IsAdmin
             })
             .ToListAsync();
 
@@ -121,27 +101,24 @@ public class AdminController : ControllerBase
     [HttpGet("users")]
     public async Task<IActionResult> ListAdmins()
     {
-        var admins = await _context.UserAdminCompanies
-            .Select(uac => uac.UserRun)
-            .Distinct()
-            .Join(_context.Users,
-                userRun => userRun,
-                user => user.Run,
-                (userRun, user) => new UserResponseDto
-                {
-                    Run = user.Run,
-                    FirstNames = user.FirstNames,
-                    LastNames = user.LastNames,
-                    Email = user.Email,
-                    Phone = user.Phone,
-                    DirStates = user.DirStates,
-                    DirCounty = user.DirCounty,
-                    DirStreet1 = user.DirStreet1,
-                    DirStreet2 = user.DirStreet2,
-                    DirStNumber = user.DirStNumber,
-                    DirInNumber = user.DirInNumber,
-                    Notify = user.Notify
-                })
+        var admins = await _context.Users
+            .Where(u => u.IsAdmin)
+            .Select(user => new UserResponseDto
+            {
+                Run = user.Run,
+                FirstNames = user.FirstNames,
+                LastNames = user.LastNames,
+                Email = user.Email,
+                Phone = user.Phone,
+                DirStates = user.DirStates,
+                DirCounty = user.DirCounty,
+                DirStreet1 = user.DirStreet1,
+                DirStreet2 = user.DirStreet2,
+                DirStNumber = user.DirStNumber,
+                DirInNumber = user.DirInNumber,
+                Notify = user.Notify,
+                IsAdmin = user.IsAdmin
+            })
             .ToListAsync();
 
         return Ok(admins);

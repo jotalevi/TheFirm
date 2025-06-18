@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import AuthGate from './AuthGate';
 
 export const metadata: Metadata = {
   title: "TheFirm Admin",
@@ -16,7 +19,9 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <AuthProvider>
-          {children}
+          <AuthGate>
+            {children}
+          </AuthGate>
         </AuthProvider>
       </body>
     </html>

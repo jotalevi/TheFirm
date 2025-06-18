@@ -1,1191 +1,633 @@
 {
 	"info": {
 		"_postman_id": "55e8f6eb-9381-45c7-9e22-57f51252d660",
-		"name": "TheFirm",
+		"name": "TheFirm API",
+		"description": "API completa para TheFirm - Sistema de gestión de eventos y tickets",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "39603330"
 	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5100",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
 	"item": [
 		{
-			"name": "auth",
+			"name": "Health Check",
 			"item": [
 				{
-					"name": "Login",
+					"name": "Health Check",
 					"request": {
-						"method": "POST",
+						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"run\": \"25535866-9\",\r\n    \"passwordHash\": \"roma2025\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
-							"raw": "{{url}}/auth/login",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Register",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"run\": \"25535866-9\",\r\n    \"firstNames\": \"Eros\",\r\n    \"lastNames\": \"Talevi\",\r\n    \"email\": \"talevineto@gmail.com\",\r\n    \"phone\": \"+56991742995\",\r\n    \"dirStates\": 0,\r\n    \"dirCounty\": 0,\r\n    \"dirStreet1\": \"El Vergel\",\r\n    \"dirStreet2\": \"AAA\",\r\n    \"dirStNumber\": \"2282\",\r\n    \"dirInNumber\": \"604\",\r\n    \"notify\": true,\r\n    \"passwordHash\": \"roma2025\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{url}}/auth/register",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
-						}
-					},
-					"response": []
+					}
 				}
 			]
 		},
 		{
-			"name": "users",
+			"name": "Authentication",
 			"item": [
 				{
-					"name": "Get User",
+					"name": "Register User",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"run\": \"12345678-9\",\n  \"firstNames\": \"Juan Carlos\",\n  \"lastNames\": \"Pérez González\",\n  \"email\": \"juan.perez@email.com\",\n  \"phone\": \"+56912345678\",\n  \"dirStates\": 1,\n  \"dirCounty\": 1,\n  \"dirStreet1\": \"Av. Providencia\",\n  \"dirStreet2\": \"Sector Centro\",\n  \"dirStNumber\": \"1234\",\n  \"dirInNumber\": \"A\",\n  \"notify\": true,\n  \"passwordHash\": \"password123\"\n}"
 						},
-						"method": "GET",
-						"header": [],
 						"url": {
-							"raw": "{{url}}/users/:run",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"users",
-								":run"
-							],
-							"variable": [
-								{
-									"key": "run",
-									"value": "25535866-9"
-								}
-							]
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
-					"name": "Get Uses",
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('authToken', response.token);",
+									"}"
+								]
+							}
+						}
+					],
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"run\": \"12345678-9\",\n  \"passwordHash\": \"password123\"\n}"
 						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/users?q=query string",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"users"
-							],
+							"raw": "{{baseUrl}}/users?q=juan",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
 							"query": [
 								{
 									"key": "q",
-									"value": "query string"
+									"value": "juan",
+									"description": "Search query (optional)"
 								}
 							]
 						}
-					},
-					"response": []
+					}
+				},
+				{
+					"name": "Get User by RUN",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/12345678-9",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "12345678-9"]
+						}
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstNames\": \"Juan Carlos\",\n  \"lastNames\": \"Pérez González\",\n  \"email\": \"juan.perez.updated@email.com\",\n  \"phone\": \"+56987654321\",\n  \"dirStates\": 1,\n  \"dirCounty\": 1,\n  \"dirStreet1\": \"Av. Las Condes\",\n  \"dirStreet2\": \"Sector Alto\",\n  \"dirStNumber\": \"5678\",\n  \"dirInNumber\": \"B\",\n  \"notify\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/12345678-9",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "12345678-9"]
+						}
+					}
 				},
 				{
 					"name": "Get User Orders",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/user/:run/orders",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"user",
-								":run",
-								"orders"
-							],
-							"variable": [
-								{
-									"key": "run",
-									"value": ""
-								}
-							]
+							"raw": "{{baseUrl}}/users/12345678-9/orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "12345678-9", "orders"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Get User Tickets",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/users/:run/tickets",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"users",
-								":run",
-								"tickets"
-							],
-							"variable": [
-								{
-									"key": "run",
-									"value": "25535866-9"
-								}
-							]
+							"raw": "{{baseUrl}}/users/12345678-9/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "12345678-9", "tickets"]
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Edit User",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"firstNames\": \"Eros\",\r\n    \"lastNames\": \"Talevi\",\r\n    \"email\": \"talevineto@gmail.com\",\r\n    \"phone\": \"+56991742995\",\r\n    \"dirStates\": 0,\r\n    \"dirCounty\": 0,\r\n    \"dirStreet1\": \"El Vergel\",\r\n    \"dirStreet2\": \"\",\r\n    \"dirStNumber\": \"2282\",\r\n    \"dirInNumber\": \"604\",\r\n    \"notify\": true,\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{url}}/users/:run",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"users",
-								":run"
-							],
-							"variable": [
-								{
-									"key": "run",
-									"value": "25535866-9"
-								}
-							]
-						}
-					},
-					"response": []
+					}
 				}
 			]
 		},
 		{
-			"name": "companies",
+			"name": "Events",
 			"item": [
 				{
-					"name": "Get Companies",
+					"name": "Get All Events",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/companies",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"companies"
-							]
+							"raw": "{{baseUrl}}/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["events"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
-					"name": "Get Company",
+					"name": "Get Event by Slug",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/companies/:id",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"companies",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
+							"raw": "{{baseUrl}}/events/concierto-rock-2024",
+							"host": ["{{baseUrl}}"],
+							"path": ["events", "concierto-rock-2024"]
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Company Events",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/companies/:id/events",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"companies",
-								":id",
-								"events"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Company",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{url}}/companies",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"companies"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "events",
-			"item": [
-				{
-					"name": "Get Events",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/events",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"events"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Event",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/events/:slug",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"events",
-								":slug"
-							],
-							"variable": [
-								{
-									"key": "slug",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Get Event Tiers",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/events/:slug/tiers",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"events",
-								":slug",
-								"tiers"
-							],
-							"variable": [
-								{
-									"key": "slug",
-									"value": ""
-								}
-							]
+							"raw": "{{baseUrl}}/events/concierto-rock-2024/tiers",
+							"host": ["{{baseUrl}}"],
+							"path": ["events", "concierto-rock-2024", "tiers"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Get Event Tier Detail",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/events/:slug/tiers/:id",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"events",
-								":slug",
-								"tiers",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "slug",
-									"value": ""
-								},
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
+							"raw": "{{baseUrl}}/events/concierto-rock-2024/tiers/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["events", "concierto-rock-2024", "tiers", "1"]
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Event Tiers",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/events/:slug/tiers",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"events",
-								":slug",
-								"tiers"
-							],
-							"variable": [
-								{
-									"key": "slug",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Create Event",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"slug\": \"nuevo-evento-2024\",\n  \"eventName\": \"Nuevo Evento 2024\",\n  \"eventDescription\": \"Descripción del nuevo evento\",\n  \"startDate\": \"2024-12-31T20:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"logoIrid\": \"logo123\",\n  \"bannerIrid\": \"banner123\",\n  \"templateIrid\": \"template123\",\n  \"cssIrid\": \"css123\",\n  \"public\": true,\n  \"companyId\": 1\n}"
+						},
 						"url": {
-							"raw": "{{url}}/events",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"events"
-							]
+							"raw": "{{baseUrl}}/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["events"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
-					"name": "Edit Event",
+					"name": "Create Event Tier",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tierName\": \"VIP Premium\",\n  \"basePrice\": 50000,\n  \"entryAllowedFrom\": \"2024-12-31T18:00:00Z\",\n  \"entryAllowedTo\": \"2024-12-31T23:59:59Z\",\n  \"singleUse\": true,\n  \"singleDaily\": false,\n  \"tierPdfTemplateIrid\": \"pdf123\",\n  \"tierMailTemplateIrid\": \"mail123\",\n  \"stockInitial\": 100,\n  \"stockCurrent\": 100,\n  \"stockSold\": 0\n}"
 						},
-						"method": "PUT",
-						"header": [],
 						"url": {
-							"raw": "{{url}}/events",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"events"
-							]
+							"raw": "{{baseUrl}}/events/concierto-rock-2024/tiers",
+							"host": ["{{baseUrl}}"],
+							"path": ["events", "concierto-rock-2024", "tiers"]
 						}
-					},
-					"response": []
+					}
+				},
+				{
+					"name": "Update Event",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventName\": \"Concierto Rock 2024 - Actualizado\",\n  \"eventDescription\": \"Descripción actualizada del evento\",\n  \"startDate\": \"2024-12-31T21:00:00Z\",\n  \"endDate\": \"2025-01-01T02:00:00Z\",\n  \"logoIrid\": \"logo456\",\n  \"bannerIrid\": \"banner456\",\n  \"templateIrid\": \"template456\",\n  \"cssIrid\": \"css456\",\n  \"public\": true,\n  \"companyId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/events/concierto-rock-2024",
+							"host": ["{{baseUrl}}"],
+							"path": ["events", "concierto-rock-2024"]
+						}
+					}
 				}
 			]
 		},
 		{
-			"name": "orders",
+			"name": "Orders",
 			"item": [
 				{
-					"name": "Get Order",
+					"name": "Get Order by ID",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/orders/:id",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"orders",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
+							"raw": "{{baseUrl}}/orders/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "1"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
 					"name": "Create Order",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userRun\": \"12345678-9\",\n  \"items\": [\n    {\n      \"tierId\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"tierId\": 2,\n      \"quantity\": 1\n    }\n  ],\n  \"paymentMethod\": \"credit_card\",\n  \"couponCode\": \"DESCUENTO10\"\n}"
+						},
 						"url": {
-							"raw": "{{url}}/orders",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"orders"
-							]
+							"raw": "{{baseUrl}}/orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"]
 						}
-					},
-					"response": []
+					}
 				}
 			]
 		},
 		{
-			"name": "analytics",
+			"name": "Companies",
 			"item": [
 				{
-					"name": "Start Session",
+					"name": "Get All Companies",
 					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/analytics/session",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"analytics",
-								"session"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Send Event",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/analytics/session",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"analytics",
-								"session"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Analytics Sessions",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/analytics",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"analytics"
-							]
+							"raw": "{{baseUrl}}/companies",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
-					"name": "Get Analytics Session Details",
+					"name": "Get Company by ID",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/analytics/:id",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"analytics",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
+							"raw": "{{baseUrl}}/companies/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "1"]
 						}
-					},
-					"response": []
+					}
+				},
+				{
+					"name": "Create Company",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyName\": \"Nueva Empresa S.A.\",\n  \"companyDescription\": \"Descripción de la nueva empresa\",\n  \"logoIrid\": \"company_logo123\",\n  \"website\": \"https://nuevaempresa.com\",\n  \"email\": \"contacto@nuevaempresa.com\",\n  \"phone\": \"+56223456789\",\n  \"address\": \"Av. Apoquindo 1234, Las Condes, Santiago\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies"]
+						}
+					}
+				},
+				{
+					"name": "Update Company",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyName\": \"Empresa Actualizada S.A.\",\n  \"companyDescription\": \"Descripción actualizada de la empresa\",\n  \"logoIrid\": \"company_logo456\",\n  \"website\": \"https://empresaactualizada.com\",\n  \"email\": \"contacto@empresaactualizada.com\",\n  \"phone\": \"+56287654321\",\n  \"address\": \"Av. Providencia 5678, Providencia, Santiago\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/companies/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["companies", "1"]
+						}
+					}
 				}
 			]
 		},
 		{
-			"name": "coupons",
+			"name": "Coupons",
 			"item": [
+				{
+					"name": "Get All Coupons",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons"]
+						}
+					}
+				},
+				{
+					"name": "Get Coupon by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/coupons/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons", "1"]
+						}
+					}
+				},
 				{
 					"name": "Create Coupon",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"DESCUENTO20\",\n  \"description\": \"20% de descuento en todos los tickets\",\n  \"discountType\": \"percentage\",\n  \"discountValue\": 20,\n  \"validFrom\": \"2024-01-01T00:00:00Z\",\n  \"validTo\": \"2024-12-31T23:59:59Z\",\n  \"usageLimit\": 100,\n  \"usageCount\": 0,\n  \"active\": true,\n  \"eventId\": 1\n}"
+						},
 						"url": {
-							"raw": "{{url}}/coupons",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"coupons"
-							]
+							"raw": "{{baseUrl}}/coupons",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
-					"name": "Apply to Cart",
+					"name": "Update Coupon",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"DESCUENTO25\",\n  \"description\": \"25% de descuento en todos los tickets\",\n  \"discountType\": \"percentage\",\n  \"discountValue\": 25,\n  \"validFrom\": \"2024-01-01T00:00:00Z\",\n  \"validTo\": \"2024-12-31T23:59:59Z\",\n  \"usageLimit\": 50,\n  \"usageCount\": 0,\n  \"active\": true,\n  \"eventId\": 1\n}"
 						},
-						"method": "POST",
-						"header": [],
 						"url": {
-							"raw": "{{url}}/coupons/:code",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"coupons",
-								":code"
-							],
-							"variable": [
-								{
-									"key": "code",
-									"value": ""
-								}
-							]
+							"raw": "{{baseUrl}}/coupons/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["coupons", "1"]
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Coupon Details",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/coupons/:code",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"coupons",
-								":code"
-							],
-							"variable": [
-								{
-									"key": "code",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
+					}
 				}
 			]
 		},
 		{
-			"name": "validate QR",
+			"name": "Analytics",
 			"item": [
 				{
-					"name": "Validate QR Code",
+					"name": "Get Event Analytics",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
+						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/validate/qr?key={{qrKey}}&secret={{qrSecret}}",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"validate",
-								"qr"
-							],
+							"raw": "{{baseUrl}}/analytics/events/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "events", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Company Analytics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/companies/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "companies", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Overall Analytics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/overall",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "overall"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Calendar",
+			"item": [
+				{
+					"name": "Get Calendar Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/calendar?startDate=2024-01-01&endDate=2024-12-31",
+							"host": ["{{baseUrl}}"],
+							"path": ["calendar"],
 							"query": [
 								{
-									"key": "key",
-									"value": "{{qrKey}}"
+									"key": "startDate",
+									"value": "2024-01-01",
+									"description": "Start date (YYYY-MM-DD)"
 								},
 								{
-									"key": "secret",
-									"value": "{{qrSecret}}"
+									"key": "endDate",
+									"value": "2024-12-31",
+									"description": "End date (YYYY-MM-DD)"
 								}
 							]
 						}
-					},
-					"response": []
+					}
 				}
 			]
 		},
 		{
-			"name": "admin",
+			"name": "Admin",
 			"item": [
 				{
-					"name": "Add COMPANY:MOD role to USER",
+					"name": "Get Admin Dashboard",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/admin/company/:id/user/:run",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"admin",
-								"company",
-								":id",
-								"user",
-								":run"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								},
-								{
-									"key": "run",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add ADMIN role to USER",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{url}}/admin/user/:run",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"admin",
-								"user",
-								":run"
-							],
-							"variable": [
-								{
-									"key": "run",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "List Mods of a Company",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/admin/company/users",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"admin",
-								"company",
-								"users"
-							]
+							"raw": "{{baseUrl}}/admin/dashboard",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "dashboard"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
-					"name": "List Admins",
+					"name": "Get System Statistics",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/admin/company/users",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"admin",
-								"company",
-								"users"
-							]
+							"raw": "{{baseUrl}}/admin/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "stats"]
 						}
-					},
-					"response": []
+					}
 				}
 			]
 		},
 		{
-			"name": "calendar",
+			"name": "Validation",
 			"item": [
 				{
-					"name": "List all events",
+					"name": "Validate User",
 					"request": {
-						"auth": {
-							"type": "noauth"
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"run\": \"12345678-9\",\n  \"passwordHash\": \"password123\"\n}"
 						},
-						"method": "GET",
-						"header": [],
 						"url": {
-							"raw": "{{url}}/calendar",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"calendar"
-							]
+							"raw": "{{baseUrl}}/validate/user",
+							"host": ["{{baseUrl}}"],
+							"path": ["validate", "user"]
 						}
-					},
-					"response": []
+					}
 				},
 				{
-					"name": "List all events [FILTERS]",
+					"name": "Validate Ticket",
 					"request": {
-						"auth": {
-							"type": "noauth"
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ticketId\": \"TICKET123\",\n  \"eventId\": 1\n}"
 						},
-						"method": "GET",
-						"header": [],
 						"url": {
-							"raw": "{{url}}/calendar?q={{searchString}}&from={{startDate}}&to={{endDate}}&internal={{internal}}&external={{external}}",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"calendar"
-							],
-							"query": [
-								{
-									"key": "q",
-									"value": "{{searchString}}"
-								},
-								{
-									"key": "from",
-									"value": "{{startDate}}"
-								},
-								{
-									"key": "to",
-									"value": "{{endDate}}"
-								},
-								{
-									"key": "internal",
-									"value": "{{internal}}"
-								},
-								{
-									"key": "external",
-									"value": "{{external}}"
-								}
-							]
+							"raw": "{{baseUrl}}/validate/ticket",
+							"host": ["{{baseUrl}}"],
+							"path": ["validate", "ticket"]
 						}
-					},
-					"response": []
+					}
 				}
 			]
-		}
-	],
-	"variable": [
-		{
-			"key": "token",
-			"value": "",
-			"type": "default"
-		},
-		{
-			"key": "url",
-			"value": "",
-			"type": "default"
-		},
-		{
-			"key": "qrKey",
-			"value": "1",
-			"type": "default"
-		},
-		{
-			"key": "qrSecret",
-			"value": "",
-			"type": "default"
-		},
-		{
-			"key": "searchString",
-			"value": "",
-			"type": "default"
-		},
-		{
-			"key": "startDate",
-			"value": "",
-			"type": "default"
-		},
-		{
-			"key": "endDate",
-			"value": "",
-			"type": "default"
-		},
-		{
-			"key": "internal",
-			"value": "",
-			"type": "default"
-		},
-		{
-			"key": "external",
-			"value": "",
-			"type": "default"
 		}
 	]
 }

@@ -13,4 +13,5 @@ public class UpdateUserDto
     required public string DirStNumber { get; set; }
     required public string DirInNumber { get; set; }
     required public bool Notify { get; set; }
+    required public bool IsAdmin { get; set; }
 }

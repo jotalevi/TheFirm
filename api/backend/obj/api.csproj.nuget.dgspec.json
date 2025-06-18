@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\neto\\projects\\TheFirmApi\\api\\backend\\api.csproj": {}
+    "C:\\Users\\neto\\projects\\thefirm\\api\\backend\\api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\neto\\projects\\TheFirmApi\\api\\backend\\api.csproj": {
+    "C:\\Users\\neto\\projects\\thefirm\\api\\backend\\api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\neto\\projects\\TheFirmApi\\api\\backend\\api.csproj",
+        "projectUniqueName": "C:\\Users\\neto\\projects\\thefirm\\api\\backend\\api.csproj",
         "projectName": "api",
-        "projectPath": "C:\\Users\\neto\\projects\\TheFirmApi\\api\\backend\\api.csproj",
+        "projectPath": "C:\\Users\\neto\\projects\\thefirm\\api\\backend\\api.csproj",
         "packagesPath": "C:\\Users\\neto\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\neto\\projects\\TheFirmApi\\api\\backend\\obj\\",
+        "outputPath": "C:\\Users\\neto\\projects\\thefirm\\api\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -5,6 +5,7 @@ using TheFirmApi.Data;
 using TheFirmApi.Dtos.Order;
 using TheFirmApi.Dtos.Ticket;
 using TheFirmApi.Dtos.User;
+using TheFirmApi.Entities;
 
 namespace TheFirmApi.Controllers;
 
@@ -49,7 +50,8 @@ namespace TheFirmApi.Controllers;
                     DirStreet2 = u.DirStreet2,
                     DirStNumber = u.DirStNumber,
                     DirInNumber = u.DirInNumber,
-                    Notify = u.Notify
+                    Notify = u.Notify,
+                    IsAdmin = u.IsAdmin
                 })
                 .ToListAsync();
 
@@ -77,7 +79,8 @@ namespace TheFirmApi.Controllers;
                 DirStreet2 = user.DirStreet2,
                 DirStNumber = user.DirStNumber,
                 DirInNumber = user.DirInNumber,
-                Notify = user.Notify
+                Notify = user.Notify,
+                IsAdmin = user.IsAdmin
             };
 
             return Ok(userDto);
@@ -118,7 +121,8 @@ namespace TheFirmApi.Controllers;
                 DirStreet2 = user.DirStreet2,
                 DirStNumber = user.DirStNumber,
                 DirInNumber = user.DirInNumber,
-                Notify = user.Notify
+                Notify = user.Notify,
+                IsAdmin = user.IsAdmin
             };
 
             return Ok(userDto);
@@ -187,5 +191,110 @@ namespace TheFirmApi.Controllers;
                 .ToListAsync();
 
             return Ok(tickets);
+        }
+
+        [HttpGet("{run}/companies-moderated")]
+        [Authorize]
+        public async Task<IActionResult> GetCompaniesModerated(string run)
+        {
+            var companies = await _context.UserModCompanies
+                .Where(umc => umc.UserRun == run)
+                .Select(umc => umc.CompanyId)
+                .ToListAsync();
+            return Ok(companies);
+        }
+
+        [HttpGet("by-company/{companyId}")]
+        [Authorize]
+        public async Task<IActionResult> GetUsersByCompany(int companyId)
+        {
+            // Obtener usuarios que han comprado tickets de eventos de esta empresa
+            var users = await _context.TicketsBought
+                .Where(t => t.Tier.Event.CompanyId == companyId)
+                .Select(t => t.UserRun)
+                .Distinct()
+                .ToListAsync();
+
+            var userDetails = await _context.Users
+                .Where(u => users.Contains(u.Run))
+                .Select(u => new UserResponseDto
+                {
+                    Run = u.Run,
+                    FirstNames = u.FirstNames,
+                    LastNames = u.LastNames,
+                    Email = u.Email,
+                    Phone = u.Phone,
+                    DirStates = u.DirStates,
+                    DirCounty = u.DirCounty,
+                    DirStreet1 = u.DirStreet1,
+                    DirStreet2 = u.DirStreet2,
+                    DirStNumber = u.DirStNumber,
+                    DirInNumber = u.DirInNumber,
+                    Notify = u.Notify,
+                    IsAdmin = u.IsAdmin
+                })
+                .ToListAsync();
+
+            return Ok(userDetails);
+        }
+
+        [HttpPut("{run}/admin")]
+        [Authorize]
+        public async Task<IActionResult> SetUserAdmin(string run, [FromBody] bool isAdmin)
+        {
+            var user = await _context.Users.FindAsync(run);
+            if (user is null) 
+                return NotFound("User not found");
+
+            user.IsAdmin = isAdmin;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"User admin status updated to {isAdmin}" });
+        }
+
+        [HttpPost("{run}/moderate-company/{companyId}")]
+        [Authorize]
+        public async Task<IActionResult> AddUserToCompanyModeration(string run, int companyId)
+        {
+            var user = await _context.Users.FindAsync(run);
+            if (user is null) 
+                return NotFound("User not found");
+
+            var company = await _context.Companies.FindAsync(companyId);
+            if (company is null) 
+                return NotFound("Company not found");
+
+            var existingMod = await _context.UserModCompanies
+                .FirstOrDefaultAsync(umc => umc.UserRun == run && umc.CompanyId == companyId);
+
+            if (existingMod != null)
+                return BadRequest("User is already a moderator for this company");
+
+            var userModCompany = new UserModCompanyEntity
+            {
+                UserRun = run,
+                CompanyId = companyId
+            };
+
+            _context.UserModCompanies.Add(userModCompany);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"User {user.FirstNames} {user.LastNames} is now a moderator for {company.CompanyName}" });
+        }
+
+        [HttpDelete("{run}/moderate-company/{companyId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveUserFromCompanyModeration(string run, int companyId)
+        {
+            var userModCompany = await _context.UserModCompanies
+                .FirstOrDefaultAsync(umc => umc.UserRun == run && umc.CompanyId == companyId);
+
+            if (userModCompany == null)
+                return NotFound("User is not a moderator for this company");
+
+            _context.UserModCompanies.Remove(userModCompany);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User removed from company moderation" });
         }
     }

@@ -20,7 +20,34 @@ public class EventController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetEvents()
+    {
+        var events = await _context.Events
+            .Include(e => e.Company)
+            .Select(e => new EventDto
+            {
+                Id = e.Id,
+                Slug = e.Slug,
+                EventName = e.EventName,
+                EventDescription = e.EventDescription,
+                StartDate = e.StartDate,
+                EndDate = e.EndDate,
+                LogoIrid = e.LogoIrid,
+                BannerIrid = e.BannerIrid,
+                TemplateIrid = e.TemplateIrid,
+                CssIrid = e.CssIrid,
+                Public = e.Public,
+                CompanyId = e.CompanyId,
+                CompanyName = e.Company.CompanyName
+            })
+            .ToListAsync();
+
+        return Ok(events);
+    }
+
+    [HttpGet("public")]
+    public async Task<IActionResult> GetPublicEvents()
     {
         var events = await _context.Events
             .Include(e => e.Company)
@@ -47,6 +74,7 @@ public class EventController : ControllerBase
     }
 
     [HttpGet("{slug}")]
+    [Authorize]
     public async Task<IActionResult> GetEvent(string slug)
     {
         var eventEntity = await _context.Events
@@ -77,6 +105,7 @@ public class EventController : ControllerBase
     }
 
     [HttpGet("{slug}/tiers")]
+    [Authorize]
     public async Task<IActionResult> GetEventTiers(string slug)
     {
         var eventEntity = await _context.Events
@@ -110,6 +139,7 @@ public class EventController : ControllerBase
     }
 
     [HttpGet("{slug}/tiers/{id}")]
+    [Authorize]
     public async Task<IActionResult> GetEventTierDetail(string slug, int id)
     {
         var eventEntity = await _context.Events
@@ -122,7 +152,7 @@ public class EventController : ControllerBase
             .FirstOrDefaultAsync(t => t.Id == id && t.EventId == eventEntity.Id);
 
         if (tier == null)
-            return NotFound("Tier not found");
+            return NotFound("Ticket tier not found");
 
         var tierDto = new TicketTierDto
         {
@@ -305,5 +335,120 @@ public class EventController : ControllerBase
             CompanyId = eventEntity.CompanyId,
             CompanyName = eventEntity.Company?.CompanyName ?? string.Empty
         });
+    }
+
+    [HttpGet("all")]
+    [Authorize]
+    public async Task<IActionResult> GetAllEvents()
+    {
+        var events = await _context.Events
+            .Include(e => e.Company)
+            .Select(e => new EventDto
+            {
+                Id = e.Id,
+                Slug = e.Slug,
+                EventName = e.EventName,
+                EventDescription = e.EventDescription,
+                StartDate = e.StartDate,
+                EndDate = e.EndDate,
+                LogoIrid = e.LogoIrid,
+                BannerIrid = e.BannerIrid,
+                TemplateIrid = e.TemplateIrid,
+                CssIrid = e.CssIrid,
+                Public = e.Public,
+                CompanyId = e.CompanyId,
+                CompanyName = e.Company.CompanyName
+            })
+            .ToListAsync();
+
+        return Ok(events);
+    }
+
+    [HttpDelete("{slug}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteEvent(string slug)
+    {
+        var eventEntity = await _context.Events
+            .FirstOrDefaultAsync(e => e.Slug == slug);
+
+        if (eventEntity == null)
+            return NotFound();
+
+        _context.Events.Remove(eventEntity);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPut("{slug}/tiers/{id}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateEventTier(string slug, int id, CreateTicketTierDto dto)
+    {
+        var eventEntity = await _context.Events
+            .FirstOrDefaultAsync(e => e.Slug == slug);
+
+        if (eventEntity == null)
+            return NotFound("Event not found");
+
+        var tier = await _context.TicketTiers
+            .FirstOrDefaultAsync(t => t.Id == id && t.EventId == eventEntity.Id);
+
+        if (tier == null)
+            return NotFound("Ticket tier not found");
+
+        // Update tier properties
+        tier.TierName = dto.TierName;
+        tier.BasePrice = dto.BasePrice;
+        tier.EntryAllowedFrom = dto.EntryAllowedFrom;
+        tier.EntryAllowedTo = dto.EntryAllowedTo;
+        tier.SingleUse = dto.SingleUse;
+        tier.SingleDaily = dto.SingleDaily;
+        tier.TierPdfTemplateIrid = dto.TierPdfTemplateIrid;
+        tier.TierMailTemplateIrid = dto.TierMailTemplateIrid;
+        tier.StockInitial = dto.StockInitial;
+
+        await _context.SaveChangesAsync();
+
+        var tierDto = new TicketTierDto
+        {
+            Id = tier.Id,
+            TierName = tier.TierName,
+            BasePrice = tier.BasePrice,
+            EntryAllowedFrom = tier.EntryAllowedFrom,
+            EntryAllowedTo = tier.EntryAllowedTo,
+            SingleUse = tier.SingleUse,
+            SingleDaily = tier.SingleDaily,
+            TierPdfTemplateIrid = tier.TierPdfTemplateIrid,
+            TierMailTemplateIrid = tier.TierMailTemplateIrid,
+            StockInitial = tier.StockInitial,
+            StockCurrent = tier.StockCurrent,
+            StockSold = tier.StockSold,
+            EventId = tier.EventId,
+            EventName = eventEntity.EventName
+        };
+
+        return Ok(tierDto);
+    }
+
+    [HttpDelete("{slug}/tiers/{id}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteEventTier(string slug, int id)
+    {
+        var eventEntity = await _context.Events
+            .FirstOrDefaultAsync(e => e.Slug == slug);
+
+        if (eventEntity == null)
+            return NotFound("Event not found");
+
+        var tier = await _context.TicketTiers
+            .FirstOrDefaultAsync(t => t.Id == id && t.EventId == eventEntity.Id);
+
+        if (tier == null)
+            return NotFound("Ticket tier not found");
+
+        _context.TicketTiers.Remove(tier);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 } 
